@@ -1,0 +1,9 @@
+[submodule "AtlasStartup/vendor/Atlas"]
+	path = AtlasStartup/vendor/Atlas
+	url = https://github.com/Kingalidj/Atlas.git
+[submodule "AtlasTemplate/vendor/Atlas"]
+	path = AtlasTemplate/vendor/Atlas
+	url = https://github.com/Kingalidj/Atlas.git
+[submodule "ConvNet/vendor/Atlas"]
+	path = ConvNet/vendor/Atlas
+	url = https://github.com/Kingalidj/Atlas.git
