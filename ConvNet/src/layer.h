@@ -11,16 +11,16 @@ namespace Compass
 	protected:
 		LayerType m_Type = LayerType::NONE;
 
-		Tensor<T> m_Gradiens;
-		Tensor<T> m_Input;
-		Tensor<T> m_Output;
+		std::shared_ptr<Tensor<T>> m_Gradiens;
+		std::shared_ptr<Tensor<T>> m_Input;
+		std::shared_ptr<Tensor<T>> m_Output;
 
 	public:
 		Layer() = default;
 		~Layer() = default;
 
 		Layer(LayerType type, TensorSize inputSize, TensorSize OutputSize)
-			: m_Gradiens(inputSize), m_Input(inputSize), m_Output(OutputSize)
+			: m_Gradiens(std::make_shared<Tensor<T>>(inputSize)), m_Input(std::make_shared<Tensor<T>>(inputSize)), m_Output(std::make_shared<Tensor<T>>(OutputSize))
 		{
 		}
 	};

@@ -21,7 +21,7 @@ uint8_t* readFile(const char* filepath)
 }
 
 DrawLayer::DrawLayer()
-	: m_Layer(Compass::ConvolutionLayer<float>({ 28, 28, 1 }, 1, 4, 10))
+	: m_Layer(Compass::ConvolutionLayer<float>({ 28, 28, 1 }, 1, 1, 4))
 {
 	uint8_t* images = readFile("assets/train-images.idx3-ubyte");
 
@@ -34,7 +34,7 @@ DrawLayer::DrawLayer()
 
 		for (int x = 0; x < 28; x++)
 			for (int y = 0; y < 28; y++)
-				m_Input.GetData(x, y, 0) = img[x + y * 28] / 255.0f;
+				m_Input->GetData(x, y, 0) = img[x + y * 28] / 255.0f;
 				//c.data(x, y, 0) = img[x + y * 28] / 255.f;
 
 		//for (int b = 0; b < 10; b++)
@@ -43,8 +43,9 @@ DrawLayer::DrawLayer()
 		//cases.push_back(c);
 	}
 
-	m_InputTexture = { m_Input };
-	m_Layer.Activate(m_Input);
+	m_InputTexture = { *m_Input };
+
+	m_OutputTexture = { *m_Layer.GetOutput() };
 
 	delete[] images;
 }
@@ -75,12 +76,20 @@ void DrawLayer::OnUpdate(Timestep ts)
 
 void DrawLayer::OnImGuiRender()
 {
+	m_Layer.Activate(m_Input);
+
 	ImGui::Begin("ConvNet Viewer");
 	ImGui::Image((void*)(std::size_t)m_InputTexture.GetRendererID(), ImVec2(300, 300));
+
+	m_OutputTexture.Update();
+	ImGui::Image((void*)(std::size_t)m_OutputTexture.GetRendererID(), ImVec2(300, 300));
 
 
 	for (auto& tFB : m_Textures)
 	{
+		Compass::RandomizeTensor<float>(*tFB.GetValuePointer(), -1, 1);
+		tFB.Update();
+
 		ImGui::Image((void*)(std::size_t)tFB.GetRendererID(), ImVec2(100, 100));
 	}
 

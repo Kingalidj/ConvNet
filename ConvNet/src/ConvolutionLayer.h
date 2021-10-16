@@ -44,7 +44,7 @@ namespace Compass
 			}
 		}
 
-		void Activate(Tensor<T>& tensor)
+		void Activate(std::shared_ptr<Tensor<T>> tensor)
 		{
 			m_Input = tensor;
 			Activate();
@@ -56,9 +56,9 @@ namespace Compass
 			{
 				Tensor<T>& data = m_Kernels[n];
 
-				for (uint32_t x = 0; x < m_Output.GetWidth(); x++)
+				for (uint32_t x = 0; x < m_Output->GetWidth(); x++)
 				{
-					for (uint32_t y = 0; y < m_Output.GetWidth(); y++)
+					for (uint32_t y = 0; y < m_Output->GetWidth(); y++)
 					{
 						TensorPoint mapped = { (T)x * m_Stride, (T)y * m_Stride, 0 };
 						T sum = 0;
@@ -67,11 +67,11 @@ namespace Compass
 						{
 							for (uint32_t j = 0; j < m_FilterSize; j++)
 							{
-								for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
+								for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
 								{
-									sum += data(i, j, z) * m_Input((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
+									sum += data(i, j, z) * (*m_Input)((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
 								}
-								m_Output(x, y, n) = sum;
+								(*m_Output)(x, y, n) = sum;
 							}
 						}
 					}
@@ -80,6 +80,8 @@ namespace Compass
 		}
 
 		std::vector<Tensor<T>>& GetKernels() { return m_Kernels; }
+		const std::shared_ptr<Tensor<T>>& GetInput() { return m_Input; }
+		const std::shared_ptr<Tensor<T>>& GetOutput() { return m_Output; }
 
 	};
 

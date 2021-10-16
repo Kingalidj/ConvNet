@@ -10,8 +10,9 @@ private:
 	//Compass::TensorFrameBuffer tFB;
 	Compass::ConvolutionLayer<float> m_Layer;
 	std::vector<Compass::TensorFrameBuffer<float>> m_Textures;
-	Compass::Tensor<float> m_Input = { 28, 28, 1 };
+	std::shared_ptr<Compass::Tensor<float>> m_Input = std::make_shared<Compass::Tensor<float>>(28, 28, 1);
 	Compass::TensorFrameBuffer<float> m_InputTexture;
+	Compass::TensorFrameBuffer<float> m_OutputTexture;
 
 public:
 
