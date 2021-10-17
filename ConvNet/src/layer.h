@@ -15,10 +15,13 @@ namespace Compass
 		Tensor<T> m_Input;
 		Tensor<T> m_Output;
 
-		Layer(LayerType type)
-			: m_Type(type) {}
-
 	public:
 		Layer() = default;
+		~Layer() = default;
+
+		Layer(LayerType type, TensorSize inputSize, TensorSize OutputSize)
+			: m_Gradiens(inputSize), m_Input(inputSize), m_Output(OutputSize)
+		{
+		}
 	};
 }

@@ -86,7 +86,7 @@ namespace Compass
 			return *this;
 		}
 
-		void MapFunction(std::function<void(T&)> function)
+		void MapFunction(const std::function<void(T&)>& function)
 		{
 			for (uint32_t i = 0; i < m_Depth * m_Width * m_Height; i++)
 			{

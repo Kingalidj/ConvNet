@@ -9,8 +9,11 @@ public:
 	App()
 		: Application("Atlas Engine", 1400, 1600, Atlas::EditorType::ATLAS2D)
 	{
+		Compass::Random::Init();
+
 		PushLayer(new DrawLayer());
 		Application::ToggleViewport(false);
+
 	}
 };
 
