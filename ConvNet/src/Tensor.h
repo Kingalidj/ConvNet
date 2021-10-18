@@ -14,6 +14,12 @@ namespace Compass
 	};
 
 	template<typename T>
+	struct TensorPoint
+	{
+		T x, y, z;
+	};
+
+	template<typename T>
 	class Tensor
 	{
 	private:
@@ -114,6 +120,8 @@ namespace Compass
 		const uint32_t GetHeight() const { return m_Height; }
 		const uint32_t GetWidth() const { return m_Width; }
 		const uint32_t GetDepth() const { return m_Depth; }
+
+		const TensorSize GetSize() { return { m_Width, m_Height, m_Depth }; }
 	};
 
 	template<typename T>
