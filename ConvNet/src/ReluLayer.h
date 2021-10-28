@@ -14,7 +14,7 @@ namespace Compass
 		{
 		}
 
-		virtual void Activate(std::shared_ptr<Tensor<float>> tensor) override
+		virtual void Activate(Tensor<float>& tensor) override
 		{
 			m_Input = tensor;
 			Activate();
@@ -22,15 +22,15 @@ namespace Compass
 
 		void Activate() 
 		{
-			for (uint32_t x = 0; x < m_Input->GetWidth(); x++)
+			for (uint32_t x = 0; x < m_Input.GetWidth(); x++)
 			{
-				for (uint32_t y = 0; y < m_Input->GetHeight(); y++)
+				for (uint32_t y = 0; y < m_Input.GetHeight(); y++)
 				{
-					for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+					for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 					{
-						float value = (*m_Input)(x, y, z);
+						float value = m_Input(x, y, z);
 						if (value < 0) value = 0;
-						(*m_Output)(x, y, z) = value;
+						m_Output(x, y, z) = value;
 					}
 				}
 			}
@@ -40,15 +40,15 @@ namespace Compass
 		{
 		}
 
-		virtual void ComputeGradient(std::shared_ptr<Tensor<float>> nextLayer) override
+		virtual void ComputeGradient(Tensor<float>& nextLayer) override
 		{
-			for (uint32_t x = 0; x < m_Input->GetHeight(); x++)
+			for (uint32_t x = 0; x < m_Input.GetHeight(); x++)
 			{
-				for (uint32_t y = 0; y < m_Input->GetWidth(); y++)
+				for (uint32_t y = 0; y < m_Input.GetWidth(); y++)
 				{
-					for (int z = 0; z < m_Input->GetDepth(); z++)
+					for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 					{
-						(*m_Gradient)(x, y, z) = ((*m_Input)(x, y, z) < 0) ? 0 : (*nextLayer)(x, y, z);
+						m_Gradient(x, y, z) = m_Input(x, y, z) < 0 ? 0 : nextLayer(x, y, z);
 					}
 				}
 			}

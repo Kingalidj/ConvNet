@@ -23,7 +23,7 @@ namespace Compass
 			ATL_ASSERT((float(inputSize.Height - kernelSize) / stride) == ((inputSize.Height - kernelSize) / stride), "Incorrect Dimesions");
 		}
 
-		virtual void Activate(std::shared_ptr<Tensor<float>> tensor) override
+		virtual void Activate(Tensor<float>& tensor) override
 		{
 			m_Input = tensor;
 			Activate();
@@ -31,11 +31,11 @@ namespace Compass
 
 		void Activate()
 		{
-			for (uint32_t x = 0; x < m_Output->GetWidth(); x++)
+			for (uint32_t x = 0; x < m_Output.GetWidth(); x++)
 			{
-				for (uint32_t y = 0; y < m_Output->GetHeight(); y++)
+				for (uint32_t y = 0; y < m_Output.GetHeight(); y++)
 				{
-					for (uint32_t z = 0; z < m_Output->GetDepth(); z++)
+					for (uint32_t z = 0; z < m_Output.GetDepth(); z++)
 					{
 						TensorPoint<float> mapped = { x * m_Stride, y * m_Stride, 0 };
 						float max = -10000;
@@ -44,12 +44,12 @@ namespace Compass
 						{
 							for (uint32_t j = 0; j < m_KernelSize; j++)
 							{
-								float value = (*m_Input)((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
+								float value = m_Input((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
 								if (value > max) max = value;
 							}
 						}
 
-						(*m_Output)(x, y, z) = max;
+						m_Output(x, y, z) = max;
 					}
 				}
 			}
@@ -73,35 +73,35 @@ namespace Compass
 			max--;
 			if (f >= max) return max;
 
-			if (limMin) return ceil(f);
-			else return floor(f);
+			if (limMin) return (int) ceil(f);
+			else return (int) floor(f);
 		}
 
 		Range MapToOutput(uint32_t x, uint32_t y )
 		{
-			float a = x;
-			float b = y;
+			float a = (float) x;
+			float b = (float) y;
 
 			return
 			{
-				NormalizeRange((a - m_KernelSize + 1) / m_Stride, m_Output->GetWidth(), true),
-				NormalizeRange((b - m_KernelSize + 1) / m_Stride, m_Output->GetHeight(), true),
+				NormalizeRange((a - m_KernelSize + 1) / m_Stride, m_Output.GetWidth(), true),
+				NormalizeRange((b - m_KernelSize + 1) / m_Stride, m_Output.GetHeight(), true),
 				0,
-				NormalizeRange(a / m_Stride, m_Output->GetWidth(), false),
-				NormalizeRange(b / m_Stride, m_Output->GetHeight(), false),
-				(int)m_Output->GetDepth() - 1
+				NormalizeRange(a / m_Stride, m_Output.GetWidth(), false),
+				NormalizeRange(b / m_Stride, m_Output.GetHeight(), false),
+				(int)m_Output.GetDepth() - 1
 			};
 		}
 
-		virtual void ComputeGradient(std::shared_ptr<Tensor<float>> nextLayer) override
+		virtual void ComputeGradient(Tensor<float>& nextLayer) override
 		{
-			for (uint32_t x = 0; x < m_Input->GetWidth(); x++)
+			for (uint32_t x = 0; x < m_Input.GetWidth(); x++)
 			{
-				for (uint32_t y = 0; y < m_Input->GetHeight(); y++)
+				for (uint32_t y = 0; y < m_Input.GetHeight(); y++)
 				{
 					Range range = MapToOutput(x, y);
 
-					for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+					for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 					{
 						float sum = 0;
 						for (int i = range.MinX; i <= range.MaxX; i++)
@@ -111,11 +111,11 @@ namespace Compass
 							{
 								int minY = j * m_Stride;
 
-								bool isMax = (*m_Input)(x, y, z) == (*m_Output)(i, j, z) ? true : false;
-								sum += isMax * (*nextLayer)(i, j, z);
+								bool isMax = m_Input(x, y, z) == m_Output(i, j, z) ? true : false;
+								sum += isMax * nextLayer(i, j, z);
 							}
 						}
-						(*m_Gradient)(x, y, z) = sum;
+						m_Gradient(x, y, z) = sum;
 
 					}
 				}

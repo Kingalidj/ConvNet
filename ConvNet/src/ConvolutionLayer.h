@@ -30,7 +30,7 @@ namespace Compass
 			{
 				int maxVal = kernelSize * kernelSize * inputSize.Depth;
 
-				Tensor<float> kernel(kernelSize, kernelSize, inputSize.Depth);
+				Tensor<float> kernel(kernelSize, kernelSize, inputSize.Depth, 0.0f);
 				m_Kernels.push_back(kernel);
 			}
 
@@ -41,12 +41,12 @@ namespace Compass
 
 			for (int i = 0; i < nKernels; i++)
 			{
-				Tensor<Gradient> grad(kernelSize, kernelSize, m_Input->GetDepth());
+				Tensor<Gradient> grad(kernelSize, kernelSize, m_Input.GetDepth(), Gradient({ 0.0f, 0.0f }));
 				m_KernelGradient.push_back(grad);
 			}
 		}
 
-		virtual void Activate(std::shared_ptr<Tensor<float>> tensor) override
+		virtual void Activate(Tensor<float>& tensor) override
 		{
 			m_Input = tensor;
 			Activate();
@@ -58,9 +58,9 @@ namespace Compass
 			{
 				Tensor<float>& data = m_Kernels[n];
 
-				for (uint32_t x = 0; x < m_Output->GetWidth(); x++)
+				for (uint32_t x = 0; x < m_Output.GetWidth(); x++)
 				{
-					for (uint32_t y = 0; y < m_Output->GetWidth(); y++)
+					for (uint32_t y = 0; y < m_Output.GetWidth(); y++)
 					{
 						TensorPoint<float> mapped = { x * m_Stride, y * m_Stride, 0 };
 						float sum = 0;
@@ -69,11 +69,11 @@ namespace Compass
 						{
 							for (uint32_t j = 0; j < m_KernelSize; j++)
 							{
-								for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+								for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 								{
-									sum += data(i, j, z) * (*m_Input)((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
+									sum += data(i, j, z) * m_Input((uint32_t) mapped.x + i, (uint32_t) mapped.y + j, z);
 								}
-								(*m_Output)(x, y, n) = sum;
+								m_Output(x, y, n) = sum;
 							}
 						}
 					}
@@ -89,7 +89,7 @@ namespace Compass
 				{
 					for (uint32_t y = 0; y < m_KernelSize; y++)
 					{
-						for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+						for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 						{
 							float& w = m_Kernels[a](x, y, z);
 							Gradient& grad = m_KernelGradient[a].GetData(x, y, z);
@@ -118,16 +118,16 @@ namespace Compass
 
 			return
 			{
-				NormalizeRange((a - m_KernelSize + 1) / m_Stride, m_Output->GetWidth(), true),
-				NormalizeRange((b - m_KernelSize + 1) / m_Stride, m_Output->GetHeight(), true),
+				NormalizeRange((a - m_KernelSize + 1) / m_Stride, m_Output.GetWidth(), true),
+				NormalizeRange((b - m_KernelSize + 1) / m_Stride, m_Output.GetHeight(), true),
 				0,
-				NormalizeRange(a / m_Stride, m_Output->GetWidth(), false),
-				NormalizeRange(b / m_Stride, m_Output->GetHeight(), false),
-				(int)m_Output->GetDepth() - 1
+				NormalizeRange(a / m_Stride, m_Output.GetWidth(), false),
+				NormalizeRange(b / m_Stride, m_Output.GetHeight(), false),
+				(int)m_Output.GetDepth() - 1
 			};
 		}
 
-		virtual void ComputeGradient(std::shared_ptr<Tensor<float>> nextLayer) override
+		virtual void ComputeGradient(Tensor<float>& nextLayer) override
 		{
 			for (uint32_t k = 0; k < m_KernelGradient.size(); k++)
 			{
@@ -135,7 +135,7 @@ namespace Compass
 				{
 					for (uint32_t y = 0; y < m_KernelSize; y++)
 					{
-						for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+						for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 						{
 							m_KernelGradient[k].GetData(x, y, z).Grad = 0;
 						}
@@ -143,13 +143,13 @@ namespace Compass
 				}
 			}
 
-			for (uint32_t x = 0; x < m_Input->GetWidth(); x++)
+			for (uint32_t x = 0; x < m_Input.GetWidth(); x++)
 			{
-				for (uint32_t y = 0; y < m_Input->GetHeight(); y++)
+				for (uint32_t y = 0; y < m_Input.GetHeight(); y++)
 				{
 					Range range = MapToOutput(x, y);
 
-					for (uint32_t z = 0; z < m_Input->GetDepth(); z++)
+					for (uint32_t z = 0; z < m_Input.GetDepth(); z++)
 					{
 						float sum = 0;
 						for (int i = range.MinX; i < range.MaxX; i++)
@@ -162,12 +162,12 @@ namespace Compass
 								for (int k = range.MinZ; k < range.MaxZ; k++)
 								{
 									int w = m_Kernels[k].GetData(x - minX, y - minY, z);
-									sum += w * nextLayer->GetData(i, j, k);
-									m_KernelGradient[k].GetData(x - minX, y - minY, z).Grad += m_Input->GetData(x, y, z) * nextLayer->GetData(i, j, k);
+									sum += w * nextLayer.GetData(i, j, k);
+									m_KernelGradient[k].GetData(x - minX, y - minY, z).Grad += m_Input.GetData(x, y, z) * nextLayer.GetData(i, j, k);
 								}
 							}
 						}
-						m_Gradient->GetData(x, y, z) = sum;
+						m_Gradient.GetData(x, y, z) = sum;
 					}
 				}
 			}

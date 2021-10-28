@@ -9,9 +9,10 @@ class DrawLayer : public Atlas::Layer
 private:
 	Compass::ConvNet m_CNN;
 	std::vector<Compass::TensorFrameBuffer> m_TensorFramebuffers;
+	std::vector<Compass::TensorFrameBuffer> m_KernelFramebuffers;
 
 	std::vector<int> m_Lables;
-	std::vector<std::shared_ptr<Compass::Tensor<float>>> m_TrainImages;
+	std::vector<Compass::Tensor<float>> m_TrainImages;
 	std::vector<int> m_TrainLabels;
 
 	int m_TrainCount = 0;

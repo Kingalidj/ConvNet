@@ -28,22 +28,32 @@ namespace Compass
 		uint32_t m_Width = 0, m_Height = 0, m_Depth = 0;
 
 	public:
-		Tensor() {}
+		Tensor() = default;
 
-		Tensor(std::uint32_t col, std::uint32_t row, std::uint32_t depth)
+		Tensor(std::uint32_t col, std::uint32_t row, std::uint32_t depth, T value = {})
 			: m_Width(col), m_Height(row), m_Depth(depth)
 		{
 			m_Values = new T[(std::size_t) m_Width * m_Height * m_Depth];
+
+			for (uint32_t i = 0; i < m_Depth * m_Width * m_Height; i++)
+			{
+				m_Values[i] = value;
+			}
 		}
 
-		Tensor(TensorSize size)
+		//Tensor(std::uint32_t col, std::uint32_t row, std::uint32_t depth, T value)
+		//	: m_Width(col), m_Height(row), m_Depth(depth)
+		//{
+		//	m_Values = new T[(std::size_t) m_Width * m_Height * m_Depth];
+
+		//	for (uint32_t i = 0; i < m_Depth * m_Width * m_Height; i++)
+		//	{
+		//		m_Values[i] = value;
+		//	}
+		//}
+
+		Tensor(TensorSize size, T value = 0)
 			: m_Width(size.Width), m_Height(size.Height), m_Depth(size.Depth)
-		{
-			m_Values = new T[(std::size_t) m_Width * m_Height * m_Depth];
-		}
-
-		Tensor(std::uint32_t col, std::uint32_t row, std::uint32_t depth, T value)
-			: m_Width(col), m_Height(row), m_Depth(depth)
 		{
 			m_Values = new T[(std::size_t) m_Width * m_Height * m_Depth];
 
@@ -61,10 +71,47 @@ namespace Compass
 			}
 		}
 
+
 		Tensor(const Tensor& other)
-			: m_Width(other.m_Width), m_Height(other.m_Height), m_Depth(other.m_Depth), m_Values(new T[(std::size_t) other.m_Width * other.m_Height * other.m_Depth])
+			: m_Width(other.m_Width), m_Height(other.m_Height), m_Depth(other.m_Depth)
 		{
-			memcpy(m_Values, other.m_Values, (std::size_t) m_Width * m_Height * m_Depth);
+			m_Values = new T[(std::size_t) m_Width * m_Height * m_Depth];
+			//memcpy(m_Values, other.m_Values, (std::size_t) m_Width * m_Height * m_Depth);
+			for (uint32_t i = 0; i < m_Depth * m_Width * m_Height; i++)
+			{
+				m_Values[i] = other.m_Values[i];
+			}
+		}
+
+		Tensor(Tensor&& other)
+			: m_Height(other.m_Height), m_Width(other.m_Width), m_Depth(other.m_Depth), m_Values(other.m_Values)
+		{
+			other.m_Values = nullptr;
+		}
+
+		friend void swap(Tensor& first, Tensor& second)
+		{
+			std::swap(first.m_Height, second.m_Height);
+			std::swap(first.m_Width, second.m_Width);
+			std::swap(first.m_Depth, second.m_Depth);
+			std::swap(first.m_Values, second.m_Values);
+		}
+
+		Tensor& operator=(Tensor& other)
+		{
+			//m_Width = other.m_Width;
+			//m_Height = other.m_Height;
+			//m_Depth = other.m_Depth;
+			swap(*this, other);
+
+
+			//if (m_Width * m_Height * m_Depth) m_Values = new T[m_Width * m_Depth * m_Height];
+
+			//for (int i = 0; i < m_Width * m_Depth * m_Height; i++)
+			//{
+			//	m_Values[i] = other.m_Values[i];
+			//}
+			return *this;
 		}
 
 		T& operator()(std::uint32_t x, std::uint32_t y, std::uint32_t z) const

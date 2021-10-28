@@ -16,10 +16,10 @@ namespace Compass
 	public:
 		ConvNet()
 		{
-			std::shared_ptr<ConvolutionLayer> layer1 = std::make_shared<ConvolutionLayer>(TensorSize({ 28, 28, 1}), 1, 5, 8);
-			std::shared_ptr<ReluLayer> layer2 = std::make_shared<ReluLayer>(layer1->GetOutput()->GetSize());
-			std::shared_ptr<PoolLayer> layer3 = std::make_shared<PoolLayer>(layer2->GetOutput()->GetSize(), 2, 2);
-			std::shared_ptr<FullyConnectedLayer> layer4 = std::make_shared<FullyConnectedLayer>(layer3->GetOutput()->GetSize(), 10);
+			std::shared_ptr<ConvolutionLayer> layer1 = std::make_shared<ConvolutionLayer>(TensorSize({ 28, 28, 1}), 1, 5, 2);
+			std::shared_ptr<ReluLayer> layer2 = std::make_shared<ReluLayer>(layer1->GetOutput().GetSize());
+			std::shared_ptr<PoolLayer> layer3 = std::make_shared<PoolLayer>(layer2->GetOutput().GetSize(), 2, 2);
+			std::shared_ptr<FullyConnectedLayer> layer4 = std::make_shared<FullyConnectedLayer>(layer3->GetOutput().GetSize(), 10);
 
 			m_Layers.push_back(layer1);
 			m_Layers.push_back(layer2);
@@ -29,7 +29,7 @@ namespace Compass
 
 		std::vector<std::shared_ptr<Layer>>& GetLayers() { return m_Layers; }
 
-		void Forward(std::shared_ptr<Tensor<float>> data)
+		void Forward(Tensor<float>& data)
 		{
 			for (int i = 0; i < m_Layers.size(); i++)
 			{
@@ -38,7 +38,7 @@ namespace Compass
 			}
 		}
 		
-		void BackProp(std::shared_ptr<Tensor<float>> gradient)
+		void BackProp(Tensor<float>& gradient)
 		{
 			for (int i = m_Layers.size() - 1; i >= 0; i--)
 			{
@@ -47,20 +47,23 @@ namespace Compass
 			}
 		}
 
-		float Train(std::shared_ptr<Tensor<float>> data, std::shared_ptr<Tensor<float>>& expected)
+		float Train(Tensor<float>& data, Tensor<float>& expected)
 		{
 			Forward(data);
-			Tensor<float> grads = *m_Layers.back()->GetOutput() - *expected;
-			BackProp(std::shared_ptr<Tensor<float>>(&grads, [](Tensor<float>* t) {}));
+			Tensor<float> grads = m_Layers.back()->GetOutput() - expected;
+			BackProp(expected);
 
 			for (auto& layer : m_Layers) layer->UpdateWeights();
 
 			float error = 0;
 
-			for (int i = 0; i < grads.GetWidth() * grads.GetHeight() * grads.GetDepth(); i++)
+			for (uint32_t i = 0; i < grads.GetWidth() * grads.GetHeight() * grads.GetDepth(); i++)
 			{
-				float f = expected->GetValuePointer()[i];
-				if (f > 0.5) error += abs(grads.GetValuePointer()[i]);
+				float f = expected.GetValuePointer()[i];
+				if (f > 0.5)
+				{
+					error += abs(grads.GetValuePointer()[i]);
+				}
 			}
 
 			return error * 100;
